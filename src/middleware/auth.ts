@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import {
-  responseCustomError,
+  responseCustom,
   responseError,
   successHandler,
 } from '../helpers/handler';
