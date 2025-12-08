@@ -69,15 +69,21 @@ export function responseVehicleCreated(data: any) {
 
   return result;
 }
-export function responseBookingCreated(data: any) {
+export function responseBookingCreated(bookingData: any, vehicleData: any) {
   const result = {
     success: true,
     message: 'Booking created successfully',
     data: {
-      customer_id: data.customer_id,
-      vehicle_id: data.vehicle_id,
-      rent_start_date: data.rent_start_date,
-      rent_end_date: data.rent_end_date,
+      customer_id: bookingData.customer_id,
+      vehicle_id: bookingData.vehicle_id,
+      rent_start_date: bookingData.rent_start_date,
+      rent_end_date: bookingData.rent_end_date,
+      total_price: bookingData.total_price,
+      status: bookingData.status,
+    },
+    vehicle: {
+      vehicle_name: vehicleData.vehicle_name,
+      daily_rent_price: vehicleData.daily_rent_price,
     },
   };
 
@@ -103,6 +109,24 @@ export function responseVehicleRetrieved(data: any) {
   const result = {
     success: true,
     message: 'Vehicle retrieved successfully',
+    data: data,
+  };
+
+  return result;
+}
+export function responseBookingRetrieved(data: any) {
+  const result = {
+    success: true,
+    message: 'Bookings retrieved successfully',
+    data: data,
+  };
+
+  return result;
+}
+export function responseBookingRetrievedCustomer(data: any) {
+  const result = {
+    success: true,
+    message: 'Your booking retrieved successfully',
     data: data,
   };
 
@@ -159,11 +183,10 @@ export function timeCalculator(start: string, end: string) {
   const endDate = new Date(end);
   const startDate = new Date(start);
   const days = (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24);
-  console.log(days);
+
   return days;
 }
 export function priceCalculator(time: number, price: number) {
   const totalPrice = time * price;
-  console.log(totalPrice);
   return totalPrice;
 }

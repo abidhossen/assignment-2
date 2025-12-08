@@ -17,24 +17,23 @@ const loginUser = async (email: string, password: string) => {
     email,
   ]);
   if (result.rows.length === 0) {
-    return null;
+    throw new Error('User not found!');
   }
   const user = result.rows[0];
-
   const match = await bcrypt.compare(password, user.password);
-  if (match) {
-    const token = jwt.sign(
-      { name: user.name, email: user.email, role: user.role },
-      config.jwtSecret!,
-      {
-        expiresIn: '7d',
-      }
-    );
-    console.log(token, user);
-    return { token, user };
-  } else if (!match) {
+  if (!match) {
     return false;
   }
+  console.log('user from', user);
+  const token = jwt.sign(
+    { id: user.id, name: user.name, email: user.email, role: user.role },
+    config.jwtSecret!,
+    {
+      expiresIn: '1d',
+    }
+  );
+  // console.log('auth service', token, user);
+  return { token, user };
 };
 export const authServices = {
   createUser,

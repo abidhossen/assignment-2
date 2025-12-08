@@ -25,7 +25,6 @@ const getVehicles = async () => {
   const result = await pool.query(
     `SELECT id,vehicle_name,type,registration_number,daily_rent_price,availability_status FROM vehicles`
   );
-  console.log('result');
   return result;
 };
 const getSingleVehicle = async (id: string) => {

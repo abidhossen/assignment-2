@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import {
   responseBookingCreated,
+  responseBookingRetrieved,
+  responseBookingRetrievedCustomer,
   responseCustom,
   responseError,
   responseVehicleCreated,
@@ -24,34 +26,89 @@ const createBooking = async (req: Request, res: Response) => {
     rent_end_date: rent_end_date,
   };
   try {
-    const result = await bookingServices.createBooking(bookingData);
-    res.status(201).json(responseBookingCreated(result.rows[0]));
-    console.log('Booking response: ', result.rows[0]);
+    const { result, vehicleData, updateVehicleStatus } =
+      await bookingServices.createBooking(bookingData);
+    res
+      .status(201)
+      .json(responseBookingCreated(result!.rows[0], vehicleData!.rows[0]));
   } catch (error: any) {
     res.status(500).json(responseError(error));
   }
 };
-const getVehicles = async (req: Request, res: Response) => {
+const getBookings = async (req: Request, res: Response) => {
   try {
-    const result = await bookingServices.getVehicles();
-    res.status(200).json(responseVehicleRetrieved(result.rows));
-  } catch (error: any) {
-    res.status(500).json(responseError(error));
-  }
-};
-const getSingleVehicle = async (req: Request, res: Response) => {
-  try {
-    const id = req.params.id;
-    const result = await bookingServices.getSingleVehicle(id!);
-    if (result.rows.length === 0) {
-      res.status(200).json(responseVehicleEmpty([]));
-    } else {
-      res.status(200).json(responseVehicleRetrieved(result.rows[0]));
+    const email = req.user!.email;
+    const role = req.user!.role;
+
+    const result = await bookingServices.getBookings(email);
+
+    const bookings = result.result.rows;
+    const customer_id = result.singleUser.rows[0].id;
+    const vehicles = result.vehicles.rows;
+    const users = result.users.rows;
+    const vehicleData: any = {};
+    const userData: any = {};
+    vehicles.forEach((vehicle) => {
+      vehicleData[vehicle.id] = vehicle;
+    });
+    users.forEach((user) => {
+      userData[user.id] = user;
+    });
+    // const singleBooking = await pool.query(
+    //   `SELECT id,vehicle_id,rent_start_date,rent_end_date,total_price,status FROM bookings WHERE customer_id=$1`,
+    //   [customer_id]
+    // );
+    console.log(customer_id);
+    if (role === 'admin') {
+      const bookingData = bookings.map((booking) => {
+        const vehicle = vehicleData[booking.vehicle_id];
+        const customer = userData[booking.customer_id];
+        return {
+          ...booking,
+          customer: {
+            name: customer.name,
+            email: customer.email,
+          },
+          vehicle: {
+            vehicle_name: vehicle.vehicle_name,
+            registration_number: vehicle.registration_number,
+          },
+        };
+      });
+
+      res.status(200).json(responseBookingRetrieved(bookingData));
+    } else if (role === 'customer') {
+      const singleBooking = await bookingServices.getSingleBooking(customer_id);
+      const vehicle = vehicleData[singleBooking.rows[0].vehicle_id];
+      const customerBookingData = {
+        ...singleBooking.rows[0],
+        vehicle: {
+          vehicle_name: vehicle.vehicle_name,
+          registration_number: vehicle.registration_number,
+          type: vehicle.type,
+        },
+      };
+      res
+        .status(200)
+        .json(responseBookingRetrievedCustomer(customerBookingData));
     }
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json(responseError(error));
   }
 };
+// const getSingleVehicle = async (req: Request, res: Response) => {
+//   try {
+//     const id = req.params.id;
+//     const result = await bookingServices.getSingleVehicle(id!);
+//     if (result.rows.length === 0) {
+//       res.status(200).json(responseVehicleEmpty([]));
+//     } else {
+//       res.status(200).json(responseVehicleRetrieved(result.rows[0]));
+//     }
+//   } catch (error) {
+//     res.status(500).json(responseError(error));
+//   }
+// };
 const updateVehicle = async (req: Request, res: Response) => {
   const {
     vehicle_name,
@@ -97,8 +154,7 @@ const deleteVehicle = async (req: Request, res: Response) => {
 };
 export const bookingController = {
   createBooking,
-  getVehicles,
-  getSingleVehicle,
+  getBookings,
   updateVehicle,
   deleteVehicle,
 };
