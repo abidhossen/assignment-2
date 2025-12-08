@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
 import {
   responseCustom,
-  responseError,
   responseVehicleCreated,
   responseVehicleEmpty,
   responseVehicleRetrieved,
   responseVehicleUpdated,
 } from '../../helpers/handler';
 import { vehicleServices } from './vehicle.service';
+import { responseServerError } from '../../helpers/response';
 const createVehicle = async (req: Request, res: Response) => {
   const {
     vehicle_name,
@@ -28,7 +28,7 @@ const createVehicle = async (req: Request, res: Response) => {
     const result = await vehicleServices.createVehicle(vehicleData);
     res.status(201).json(responseVehicleCreated(result.rows[0]));
   } catch (error: any) {
-    res.status(500).json(responseError(error));
+    responseServerError(res, error.message);
   }
 };
 const getVehicles = async (req: Request, res: Response) => {
@@ -36,7 +36,7 @@ const getVehicles = async (req: Request, res: Response) => {
     const result = await vehicleServices.getVehicles();
     res.status(200).json(responseVehicleRetrieved(result.rows));
   } catch (error: any) {
-    res.status(500).json(responseError(error));
+    responseServerError(res, error.message);
   }
 };
 const getSingleVehicle = async (req: Request, res: Response) => {
@@ -50,7 +50,7 @@ const getSingleVehicle = async (req: Request, res: Response) => {
       return result.rows[0];
     }
   } catch (error) {
-    res.status(500).json(responseError(error));
+    responseServerError(res, (error as Error).message);
   }
 };
 const updateVehicle = async (req: Request, res: Response) => {
@@ -78,7 +78,7 @@ const updateVehicle = async (req: Request, res: Response) => {
       res.status(200).json(responseVehicleUpdated(result.rows[0]));
     }
   } catch (error) {
-    res.status(500).json(responseError(error));
+    responseServerError(res, (error as Error).message);
   }
 };
 const deleteVehicle = async (req: Request, res: Response) => {
@@ -93,7 +93,7 @@ const deleteVehicle = async (req: Request, res: Response) => {
         .json(responseCustom(true, 'Vehicle deleted successfully'));
     }
   } catch (error) {
-    res.status(500).json(responseError(error));
+    responseServerError(res, (error as Error).message);
   }
 };
 export const vehicleController = {

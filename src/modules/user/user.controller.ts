@@ -1,29 +1,21 @@
 import { Request, Response } from 'express';
 import {
-  responseUserCreated,
-  responseError,
-  successHandler,
-  responseVehicleEmpty,
   responseUserEmpty,
-  responseVehicleUpdated,
   responseUserUpdated,
   responseCustom,
 } from '../../helpers/handler';
 import { userServices } from './user.service';
-
+import { responseServerError, responseSuccess } from '../../helpers/response';
 const getUser = async (req: Request, res: Response) => {
   try {
     const result = await userServices.getUser();
-    res
-      .status(200)
-      .json(successHandler(true, 'Users Retrived Successfully', result.rows));
+
+    responseSuccess(res, 'Users Retrived Successfully', result.rows);
   } catch (error: any) {
-    res.status(500).json(responseError(error));
+    responseServerError(res, error.message);
   }
 };
-
 const updateUser = async (req: Request, res: Response) => {
-  
   const authRole = req.user!.role;
   const { name, email, phone, role } = req.body;
   try {
@@ -42,7 +34,7 @@ const updateUser = async (req: Request, res: Response) => {
       res.status(200).json(responseUserUpdated(result.rows[0]));
     }
   } catch (error) {
-    res.status(500).json(responseError(error));
+    responseServerError(res, (error as Error).message);
   }
 };
 const deleteUser = async (req: Request, res: Response) => {
@@ -56,7 +48,7 @@ const deleteUser = async (req: Request, res: Response) => {
       res.status(200).json(responseCustom(true, 'User deleted successfully'));
     }
   } catch (error) {
-    res.status(500).json(responseError(error));
+    responseServerError(res, (error as Error).message);
   }
 };
 export const userControllers = {

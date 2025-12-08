@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, response, Response } from 'express';
 import {
   responseBookingCancelled,
   responseBookingCreated,
@@ -6,9 +6,9 @@ import {
   responseBookingRetrievedCustomer,
   responseBookingReturned,
   responseEmptyBooking,
-  responseError,
 } from '../../helpers/handler';
 import { bookingServices } from './booking.service';
+import { responseServerError } from '../../helpers/response';
 const createBooking = async (req: Request, res: Response) => {
   const { customer_id, vehicle_id, rent_start_date, rent_end_date } = req.body;
 
@@ -25,7 +25,7 @@ const createBooking = async (req: Request, res: Response) => {
       .status(201)
       .json(responseBookingCreated(result!.rows[0], vehicleData!.rows[0]));
   } catch (error: any) {
-    res.status(500).json(responseError(error));
+    responseServerError(res, error.message);
   }
 };
 const getBookings = async (req: Request, res: Response) => {
@@ -79,7 +79,7 @@ const getBookings = async (req: Request, res: Response) => {
         .json(responseBookingRetrievedCustomer(customerBookingData));
     }
   } catch (error: any) {
-    res.status(500).json(responseError(error));
+    responseServerError(res, error.message);
   }
 };
 const updateBooking = async (req: Request, res: Response) => {
@@ -105,7 +105,7 @@ const updateBooking = async (req: Request, res: Response) => {
       }
     }
   } catch (error) {
-    res.status(500).json(responseError(error));
+    responseServerError(res, (error as Error).message);
   }
 };
 

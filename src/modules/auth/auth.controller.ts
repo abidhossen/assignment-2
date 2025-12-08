@@ -1,12 +1,11 @@
-import { Request, Response } from 'express';
+import { Request, response, Response } from 'express';
 import { authServices } from './auth.service';
 import {
-  passwordError,
+  responseBadRequest,
+  responseServerError,
   responseUserCreated,
-  responseError,
-  responseLoginFailed,
   responseLoginSuccess,
-} from '../../helpers/handler';
+} from '../../helpers/response';
 
 const createUser = async (req: Request, res: Response) => {
   const { name, email, password, phone, role } = req.body;
@@ -21,12 +20,12 @@ const createUser = async (req: Request, res: Response) => {
   try {
     if (password.length >= 6) {
       const result = await authServices.createUser(userData);
-      res.status(201).json(responseUserCreated(result.rows[0]));
+      responseUserCreated(res, result.rows[0]);
     } else {
-      res.status(500).json(passwordError());
+      responseBadRequest(res, 'Password must be at least 6 characters long');
     }
   } catch (error: any) {
-    res.status(500).json(responseError(error));
+    responseServerError(res, error.message);
   }
 };
 const loginUser = async (req: Request, res: Response) => {
@@ -34,12 +33,12 @@ const loginUser = async (req: Request, res: Response) => {
   try {
     const result = await authServices.loginUser(email, password);
     if (!result) {
-      res.status(200).json(responseLoginFailed());
+      responseBadRequest(res, 'Invalid email or password');
     } else {
-      res.status(200).json(responseLoginSuccess(result));
+      responseLoginSuccess(res, result);
     }
   } catch (error: any) {
-    res.status(500).json(responseError(error));
+    responseServerError(res, error.message);
   }
 };
 export const authController = {
