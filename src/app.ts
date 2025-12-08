@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express';
 import initDB from './config/db';
 import logger from './middleware/logger';
-
 import { authRoutes } from './modules/auth/auth.route';
 import config from './config';
 import { vehicleRoutes } from './modules/vehicle/vehicle.route';

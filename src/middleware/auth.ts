@@ -1,15 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
-import {
-  responseCustom,
-  responseError,
-  successHandler,
-} from '../helpers/handler';
 import config from '../config';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { pool } from '../config/db';
 
 const auth = (...roles: string[]) => {
-  console.log(roles);
   return async (req: Request, res: Response, next: NextFunction) => {
     const headerToken = req.headers.authorization;
     const token = headerToken?.split(' ')[1];
@@ -27,7 +21,6 @@ const auth = (...roles: string[]) => {
     if (roles.length && !roles.includes(decoded.role)) {
       throw new Error('You are not authorized');
     }
-    console.log('from', decoded);
     next();
   };
 };

@@ -24,7 +24,6 @@ const loginUser = async (email: string, password: string) => {
   if (!match) {
     return false;
   }
-  console.log('user from', user);
   const token = jwt.sign(
     { id: user.id, name: user.name, email: user.email, role: user.role },
     config.jwtSecret!,
@@ -32,7 +31,6 @@ const loginUser = async (email: string, password: string) => {
       expiresIn: '1d',
     }
   );
-  // console.log('auth service', token, user);
   return { token, user };
 };
 export const authServices = {

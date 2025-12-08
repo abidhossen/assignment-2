@@ -20,7 +20,7 @@ const createBooking = async (payload: Record<string, unknown>) => {
     rent_end_date as string
   );
   const total_price = priceCalculator(time, dailyPrice);
-  const status = 'acitve';
+  const status = 'active';
 
   const result = await pool.query(
     `INSERT INTO bookings(customer_id,vehicle_id,rent_start_date,rent_end_date,total_price,status) VALUES($1,$2,$3,$4,$5,$6) RETURNING *`,
@@ -45,10 +45,6 @@ const getBookings = async (email: string) => {
     `SELECT id,name,email FROM users WHERE email = $1`,
     [email]
   );
-  // const singleResult = await pool.query(
-  //   `SELECT id,customer_id,vehicle_id,rent_start_date,rent_end_date,total_price,status FROM bookings WHERE email = $1`,
-  //   [singleUser]
-  // );
   const result = await pool.query(
     `SELECT id,customer_id,vehicle_id,rent_start_date,rent_end_date,total_price,status FROM bookings`
   );
@@ -66,37 +62,33 @@ const getSingleBooking = async (id: string) => {
   );
   return result;
 };
-const updateVehicle = async (payload: Record<string, unknown>) => {
-  const {
-    vehicle_name,
-    type,
-    registration_number,
-    daily_rent_price,
-    availability_status,
-    id,
-  } = payload;
-
-  const result = await pool.query(
-    `UPDATE vehicles SET vehicle_name=$1, type=$2,registration_number=$3,daily_rent_price=$4,availability_status=$5 WHERE id=$6 RETURNING *`,
-    [
-      vehicle_name,
-      type,
-      registration_number,
-      daily_rent_price,
-      availability_status,
-      id,
-    ]
+const getSingleBookingById = async (id: string) => {
+  const singleBooking = await pool.query(
+    `SELECT id,vehicle_id,rent_start_date,rent_end_date,total_price,status FROM bookings WHERE id=$1`,
+    [id]
   );
-  return result;
+  return singleBooking;
 };
-const deleteVehicle = async (id: string) => {
-  const result = await pool.query(`DELETE FROM vehicles WHERE id = $1`, [id]);
-  return result;
+
+const updateBooking = async (payload: Record<string, unknown>) => {
+  const { status, id, vehicle_id } = payload;
+  const result = await pool.query(
+    `UPDATE bookings SET status=$1 WHERE id=$2 RETURNING *`,
+    [status, id]
+  );
+  const availability_status = 'available';
+  const updateVehicleStatus = await pool.query(
+    `UPDATE vehicles SET availability_status=$1 WHERE id=$2 RETURNING *`,
+    [availability_status, vehicle_id]
+  );
+
+  return { result, updateVehicleStatus };
 };
+
 export const bookingServices = {
   createBooking,
   getBookings,
   getSingleBooking,
-  updateVehicle,
-  deleteVehicle,
+  getSingleBookingById,
+  updateBooking,
 };

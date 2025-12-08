@@ -141,6 +141,7 @@ export function responseVehicleEmpty(data: any) {
 
   return result;
 }
+
 export function responseUserEmpty(data: any) {
   const result = {
     success: true,
@@ -149,6 +150,7 @@ export function responseUserEmpty(data: any) {
   };
   return result;
 }
+
 export function responseUserUpdated(data: any) {
   const result = {
     success: true,
@@ -159,6 +161,43 @@ export function responseUserUpdated(data: any) {
       email: data.email,
       phone: data.phone,
       role: data.role,
+    },
+  };
+
+  return result;
+}
+export function responseBookingCancelled(data: any) {
+  const result = {
+    success: true,
+    message: 'Booking cancelled successfully',
+    data: {
+      id: 1,
+      customer_id: data.customer_id,
+      vehicle_id: data.vehicle_id,
+      rent_start_date: data.rent_start_date,
+      rent_end_date: data.rent_end_date,
+      total_price: data.total_price,
+      status: data.status,
+    },
+  };
+
+  return result;
+}
+export function responseBookingReturned(data: any) {
+  const result = {
+    success: true,
+    message: 'Booking marked as returned. Vehicle is now available',
+    data: {
+      id: data.id,
+      customer_id: data.customer_id,
+      vehicle_id: data.vehicle_id,
+      rent_start_date: data.rent_start_date,
+      rent_end_date: data.rent_end_date,
+      total_price: data.total_price,
+      status: data.status,
+      vehicle: {
+        availability_status: 'available',
+      },
     },
   };
 
@@ -189,4 +228,12 @@ export function timeCalculator(start: string, end: string) {
 export function priceCalculator(time: number, price: number) {
   const totalPrice = time * price;
   return totalPrice;
+}
+export function responseEmptyBooking(data: any) {
+  const result = {
+    success: true,
+    message: 'No booking found',
+    data: data,
+  };
+  return result;
 }

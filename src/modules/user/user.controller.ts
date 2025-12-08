@@ -23,6 +23,8 @@ const getUser = async (req: Request, res: Response) => {
 };
 
 const updateUser = async (req: Request, res: Response) => {
+  
+  const authRole = req.user!.role;
   const { name, email, phone, role } = req.body;
   try {
     const id = req.params.id;

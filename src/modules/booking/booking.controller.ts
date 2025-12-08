@@ -1,21 +1,14 @@
 import { Request, Response } from 'express';
 import {
+  responseBookingCancelled,
   responseBookingCreated,
   responseBookingRetrieved,
   responseBookingRetrievedCustomer,
-  responseCustom,
+  responseBookingReturned,
+  responseEmptyBooking,
   responseError,
-  responseVehicleCreated,
-  responseVehicleEmpty,
-  responseVehicleRetrieved,
-  responseVehicleUpdated,
-  timeCalculator,
 } from '../../helpers/handler';
 import { bookingServices } from './booking.service';
-import { vehicleServices } from '../vehicle/vehicle.service';
-import { vehicleController } from '../vehicle/vehicle.controller';
-import { pool } from '../../config/db';
-
 const createBooking = async (req: Request, res: Response) => {
   const { customer_id, vehicle_id, rent_start_date, rent_end_date } = req.body;
 
@@ -39,9 +32,7 @@ const getBookings = async (req: Request, res: Response) => {
   try {
     const email = req.user!.email;
     const role = req.user!.role;
-
     const result = await bookingServices.getBookings(email);
-
     const bookings = result.result.rows;
     const customer_id = result.singleUser.rows[0].id;
     const vehicles = result.vehicles.rows;
@@ -54,11 +45,6 @@ const getBookings = async (req: Request, res: Response) => {
     users.forEach((user) => {
       userData[user.id] = user;
     });
-    // const singleBooking = await pool.query(
-    //   `SELECT id,vehicle_id,rent_start_date,rent_end_date,total_price,status FROM bookings WHERE customer_id=$1`,
-    //   [customer_id]
-    // );
-    console.log(customer_id);
     if (role === 'admin') {
       const bookingData = bookings.map((booking) => {
         const vehicle = vehicleData[booking.vehicle_id];
@@ -96,65 +82,35 @@ const getBookings = async (req: Request, res: Response) => {
     res.status(500).json(responseError(error));
   }
 };
-// const getSingleVehicle = async (req: Request, res: Response) => {
-//   try {
-//     const id = req.params.id;
-//     const result = await bookingServices.getSingleVehicle(id!);
-//     if (result.rows.length === 0) {
-//       res.status(200).json(responseVehicleEmpty([]));
-//     } else {
-//       res.status(200).json(responseVehicleRetrieved(result.rows[0]));
-//     }
-//   } catch (error) {
-//     res.status(500).json(responseError(error));
-//   }
-// };
-const updateVehicle = async (req: Request, res: Response) => {
-  const {
-    vehicle_name,
-    type,
-    registration_number,
-    daily_rent_price,
-    availability_status,
-  } = req.body;
+const updateBooking = async (req: Request, res: Response) => {
+  const { status } = req.body;
+  const role = req.user!.role;
   try {
     const id = req.params.id;
-    const vehicleData = {
-      vehicle_name: vehicle_name,
-      type: type,
-      registration_number: registration_number,
-      daily_rent_price: daily_rent_price,
-      availability_status: availability_status,
+    const singleBooking = await bookingServices.getSingleBookingById(id!);
+    const bookingData = {
+      status: status,
       id: id,
+      vehicle_id: singleBooking.rows[0].vehicle_id,
     };
-    const result = await bookingServices.updateVehicle(vehicleData);
-    if (result.rows.length === 0) {
-      res.status(200).json(responseVehicleEmpty([]));
+
+    const result = await bookingServices.updateBooking(bookingData);
+    if (result.result.rows.length === 0) {
+      res.status(200).json(responseEmptyBooking([]));
     } else {
-      res.status(200).json(responseVehicleUpdated(result.rows[0]));
+      if (role === 'customer') {
+        res.status(200).json(responseBookingCancelled(result.result.rows[0]));
+      } else {
+        res.status(200).json(responseBookingReturned(result.result.rows[0]));
+      }
     }
   } catch (error) {
     res.status(500).json(responseError(error));
   }
 };
-const deleteVehicle = async (req: Request, res: Response) => {
-  try {
-    const id = req.params.id;
-    const result = await bookingServices.deleteVehicle(id!);
-    if (result.rowCount === 0) {
-      res.status(404).json(responseVehicleEmpty([]));
-    } else {
-      res
-        .status(200)
-        .json(responseCustom(true, 'Vehicle deleted successfully'));
-    }
-  } catch (error) {
-    res.status(500).json(responseError(error));
-  }
-};
+
 export const bookingController = {
   createBooking,
   getBookings,
-  updateVehicle,
-  deleteVehicle,
+  updateBooking,
 };
